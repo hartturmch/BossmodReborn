@@ -8,6 +8,19 @@
 
 BossmodReborn is a community-driven fork of the original Bossmod plugin for Final Fantasy XIV. It aims to enhance your gameplay by providing real-time tactical guidance and tools that simplify complex raid mechanics. This tool is invaluable for optimizing in-game strategies, ensuring precise positioning, and enhancing overall raid performance.
 
+## Installation (Dalamud)
+
+1. Open Dalamud settings in-game with `/xlsettings`.
+2. Go to `Experimental`.
+3. Add this custom plugin repository:
+   `https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/pluginmaster.json`
+4. Save, then open `/xlplugins`.
+5. Search for `BossMod Reborn` and install it.
+
+## Changes
+
+1. Alteração: Added Feint to Melee AI DPS. The `VBM AI` preset now enables Feint for `Melee DPS AI`, and the AI uses it before predicted raidwide/shared damage or tankbusters when the boss is in range.
+
 ## Features
 
 - **Advanced Radar System**: A sophisticated on-screen map displaying player and boss positions, imminent AOEs, and other crucial mechanics. This system helps players visualize the battlefield, simplifying decision-making processes.

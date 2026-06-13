@@ -1,0 +1,34 @@
+[
+  {
+    "Author": "The Combat Reborn Team",
+    "Name": "BossMod Reborn",
+    "InternalName": "BossModReborn",
+    "Description": "A bunch of utilities to simplify boss mechanics",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 15,
+    "TestingDalamudApiLevel": 15,
+    "Tags": [
+      "combat",
+      "boss",
+      "dodge",
+      "mechanics",
+      "pve",
+      "raids",
+      "trials"
+    ],
+    "LoadRequiredState": 0,
+    "LoadSync": false,
+    "CanUnloadAsync": false,
+    "LoadPriority": 0,
+    "IsTestingExclusive": false,
+    "IconUrl": "https://raw.githubusercontent.com/FFXIV-CombatReborn/RebornAssets/main/IconAssets/BMR_Icon.png",
+    "Punchline": "Don't fail at raid mechanics anymore",
+    "RepoUrl": "https://github.com/hartturmch/BossmodReborn",
+    "AcceptsFeedback": true,
+    "DownloadLinkInstall": "https://github.com/hartturmch/BossmodReborn/releases/download/0.0.0.1/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/hartturmch/BossmodReborn/releases/download/0.0.0.1/latest.zip",
+    "AssemblyVersion": "0.0.0.1",
+    "DownloadCount": 0,
+    "Changelog": "Added Feint to Melee DPS AI."
+  }
+]

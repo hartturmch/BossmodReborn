@@ -437,6 +437,10 @@
             "Option": "Enabled"
           },
           {
+            "Track": "Feint",
+            "Option": "Enabled"
+          },
+          {
             "Track": "Stun",
             "Option": "Enabled"
           }
