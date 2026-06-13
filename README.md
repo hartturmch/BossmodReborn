@@ -8,6 +8,10 @@
 
 BossmodReborn is a community-driven fork of the original Bossmod plugin for Final Fantasy XIV. It aims to enhance your gameplay by providing real-time tactical guidance and tools that simplify complex raid mechanics. This tool is invaluable for optimizing in-game strategies, ensuring precise positioning, and enhancing overall raid performance.
 
+This is extra work for changes to the original BMR, and it does not mean every change I make here will be implemented in the original project. If you want to see the original, check this repository:
+
+https://github.com/FFXIV-CombatReborn/BossmodReborn
+
 ## Installation (Dalamud)
 
 1. Open Dalamud settings in-game with `/xlsettings`.
