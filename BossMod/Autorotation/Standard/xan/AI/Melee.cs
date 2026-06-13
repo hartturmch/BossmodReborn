@@ -8,8 +8,6 @@ public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBas
         public Track<EnabledByDefault> SecondWind;
         public Track<EnabledByDefault> Bloodbath;
         public Track<EnabledByDefault> Stun;
-        [Track("Feint", Action = ClassShared.AID.Feint)]
-        public Track<EnabledByDefault> Feint;
         [Track("Limit Break", InternalName = "Limit Break", Actions = [ClassShared.AID.Braver, ClassShared.AID.Bladedance])]
         public Track<EnabledByDefault> LimitBreak;
     }
@@ -32,9 +30,6 @@ public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBas
         if (strategy.Bloodbath.IsEnabled() && Player.InCombat && Player.PendingHPRatio <= 0.3)
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bloodbath), Player, ActionQueue.Priority.Medium);
 
-        if (strategy.Feint.IsEnabled() && ShouldFeint(primaryTarget))
-            Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Feint), primaryTarget, ActionQueue.Priority.Low);
-
         // low blow
         if (strategy.Stun.IsEnabled() && NextChargeIn(ClassShared.AID.LegSweep) == 0)
         {
@@ -55,15 +50,6 @@ public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBas
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.RPR.AID.ArcaneCrest), Player, ActionQueue.Priority.VeryLow);
 
         ExecLB(strategy, primaryTarget);
-    }
-
-    private bool ShouldFeint(Actor? primaryTarget)
-    {
-        if (primaryTarget == null || Player.DistanceToHitbox(primaryTarget) > 10)
-            return false;
-
-        var deadline = World.FutureTime(5);
-        return Raidwides.Any(t => deadline > t) || Tankbusters.Any(t => deadline > t.Item2);
     }
 
     private void ExecLB(in Strategy strategy, Actor? primaryTarget)
