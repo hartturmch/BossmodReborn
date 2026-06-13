@@ -25,8 +25,8 @@
     "Punchline": "Don't fail at raid mechanics anymore",
     "RepoUrl": "https://github.com/hartturmch/BossmodReborn",
     "AcceptsFeedback": true,
-    "DownloadLinkInstall": "https://github.com/hartturmch/BossmodReborn/releases/download/0.0.0.1/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/hartturmch/BossmodReborn/releases/download/0.0.0.1/latest.zip",
+    "DownloadLinkInstall": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
+    "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
     "Changelog": "Added Feint to Melee DPS AI."
