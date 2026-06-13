@@ -29,6 +29,6 @@
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
-    "Changelog": "Added Feint to Melee DPS AI."
+    "Changelog": "Added Utility for Roles: Melee DPS with Feint and Bloodbath."
   }
 ]

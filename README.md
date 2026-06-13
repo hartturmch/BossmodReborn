@@ -23,4 +23,4 @@ https://github.com/FFXIV-CombatReborn/BossmodReborn
 
 ## Changes
 
-1. Alteração: Added Feint to Melee AI DPS. The `VBM AI` preset now enables Feint for `Melee DPS AI`, and the AI uses it before predicted raidwide/shared damage or tankbusters when the boss is in range.
+1. Change: Added a `Melee DPS` module under `Utility for Roles` with Feint and Bloodbath role actions.
