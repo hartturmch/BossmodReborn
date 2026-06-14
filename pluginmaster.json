@@ -29,6 +29,6 @@
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
-    "Changelog": "Added Utility for Roles: Melee DPS with Feint and Bloodbath."
+    "Changelog": "Added smart Limit Break support to Utility for Roles: Melee DPS. It uses LB when the content's max bars are full, or as execute at 10% target HP."
   }
 ]
