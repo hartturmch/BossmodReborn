@@ -45,8 +45,9 @@ public sealed class PartyState
 
     public int LimitBreakCur;
     public int LimitBreakMax = 10000;
+    public int LimitBreakBars = 3;
 
-    public int LimitBreakLevel => LimitBreakMax > 0 ? LimitBreakCur / LimitBreakMax : 0;
+    public int LimitBreakLevel => LimitBreakMax > 0 ? Math.Min(LimitBreakCur / LimitBreakMax, LimitBreakBars) : 0;
 
     public PartyState(ActorState actorState)
     {
@@ -199,9 +200,9 @@ public sealed class PartyState
                 ops.Add(new OpModify(i, m));
             }
         }
-        if (LimitBreakCur != 0 || LimitBreakMax != 10000)
+        if (LimitBreakCur != 0 || LimitBreakMax != 10000 || LimitBreakBars != 3)
         {
-            ops.Add(new OpLimitBreakChange(LimitBreakCur, LimitBreakMax));
+            ops.Add(new OpLimitBreakChange(LimitBreakCur, LimitBreakMax, LimitBreakBars));
         }
         return ops;
     }
@@ -235,17 +236,19 @@ public sealed class PartyState
     }
 
     public Event<OpLimitBreakChange> LimitBreakChanged = new();
-    public sealed class OpLimitBreakChange(int cur, int max) : WorldState.Operation
+    public sealed class OpLimitBreakChange(int cur, int max, int bars = 3) : WorldState.Operation
     {
         public readonly int Cur = cur;
         public readonly int Max = max;
+        public readonly int Bars = bars;
 
         protected override void Exec(WorldState ws)
         {
             ws.Party.LimitBreakCur = Cur;
             ws.Party.LimitBreakMax = Max;
+            ws.Party.LimitBreakBars = Bars;
             ws.Party.LimitBreakChanged.Fire(this);
         }
-        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("LB  "u8).Emit(Cur).Emit(Max);
+        public override void Write(ReplayRecorder.Output output) => output.EmitFourCC("LB  "u8).Emit(Cur).Emit(Max).Emit(Bars);
     }
 }

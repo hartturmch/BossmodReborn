@@ -603,9 +603,9 @@ sealed class WorldStateGameSync : IDisposable
 
         // update limit break
         var lb = LimitBreakController.Instance();
-        if (_ws.Party.LimitBreakCur != lb->CurrentUnits || _ws.Party.LimitBreakMax != lb->BarUnits)
+        if (_ws.Party.LimitBreakCur != lb->CurrentUnits || _ws.Party.LimitBreakMax != lb->BarUnits || _ws.Party.LimitBreakBars != lb->BarCount)
         {
-            _ws.Execute(new PartyState.OpLimitBreakChange(lb->CurrentUnits, lb->BarUnits));
+            _ws.Execute(new PartyState.OpLimitBreakChange(lb->CurrentUnits, lb->BarUnits, lb->BarCount));
         }
     }
 

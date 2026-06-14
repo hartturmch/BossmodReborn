@@ -274,6 +274,15 @@ public sealed class ActionDefinitions : IDisposable
 
         RegisterItem(IDMiscItemGreens, 1.1f);
 
+        Register(IDGeneralLimitBreak, new(IDGeneralLimitBreak)
+        {
+            AllowedTargets = ActionTargets.Hostile,
+            Range = 8,
+            CastTime = 4.5f,
+            CastAnimLock = 3.86f,
+            Category = ActionCategory.LimitBreak9
+        });
+
         // special content actions - bozja, deep dungeons, etc
         for (var i = BozjaHolsterID.None + 1; i < BozjaHolsterID.Count; ++i)
         {

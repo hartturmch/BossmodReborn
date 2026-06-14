@@ -848,7 +848,12 @@ public sealed class ReplayParserLog : IDisposable
     private ActorState.OpEventOpenTreasure ParseActorEventOpenTreasure() => new(_input.ReadActorID());
     private PartyState.OpModify ParsePartyModify() => new(_input.ReadInt(), new(_input.ReadULong(true), _input.ReadULong(true), _version >= 15 && _input.ReadBool(), _version < 15 ? "" : _input.ReadString()));
     private PartyState.OpModify ParsePartyLeave() => new(_input.ReadInt(), new(0, 0, false, ""));
-    private PartyState.OpLimitBreakChange ParsePartyLimitBreak() => new(_input.ReadInt(), _input.ReadInt());
+    private PartyState.OpLimitBreakChange ParsePartyLimitBreak()
+    {
+        var cur = _input.ReadInt();
+        var max = _input.ReadInt();
+        return new(cur, max, _version >= 31 ? _input.ReadInt() : 3);
+    }
 
     private ClientState.OpActionRequest ParseClientActionRequest()
     {

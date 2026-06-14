@@ -6,7 +6,7 @@ namespace BossMod;
 
 public sealed class ReplayRecorder : IDisposable
 {
-    public const int Version = 30;
+    public const int Version = 31;
     public uint CFCID;
     public string LogPath;
 
