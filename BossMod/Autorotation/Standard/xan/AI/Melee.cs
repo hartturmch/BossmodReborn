@@ -8,6 +8,8 @@ public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBas
         public Track<EnabledByDefault> SecondWind;
         public Track<EnabledByDefault> Bloodbath;
         public Track<EnabledByDefault> Stun;
+        [Track("Limit Break", InternalName = "Limit Break", Actions = [ClassShared.AID.Braver, ClassShared.AID.Bladedance])]
+        public Track<EnabledByDefault> LimitBreak;
     }
 
     public static RotationModuleDefinition Definition()
@@ -46,5 +48,36 @@ public sealed class MeleeAI(RotationModuleManager manager, Actor player) : AIBas
 
         if (Player.Class == Class.RPR && Hints.PotentialTargets.Any(t => t.Actor.TargetID == Player.InstanceID && t.Actor.CastInfo == null && t.Actor.DistanceToHitbox(Player) < 6))
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(BossMod.RPR.AID.ArcaneCrest), Player, ActionQueue.Priority.VeryLow);
+
+        ExecLB(strategy, primaryTarget);
+    }
+
+    private void ExecLB(in Strategy strategy, Actor? primaryTarget)
+    {
+        if (!strategy.LimitBreak.IsEnabled() || World.Party.WithoutSlot(includeDead: true).Count(x => x.Type == ActorType.Player) > 1 || Bossmods.ActiveModule is null)
+            return;
+
+        switch (World.Party.LimitBreakLevel)
+        {
+            case 1:
+                break;
+            case 2:
+                Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Bladedance), primaryTarget, ActionQueue.Priority.VeryHigh, castTime: 3);
+                break;
+            case 3:
+                var lb3 = Player.Class switch
+                {
+                    Class.PGL or Class.MNK => ClassMNKUtility.IDLimitBreak3,
+                    Class.LNC or Class.DRG => ClassDRGUtility.IDLimitBreak3,
+                    Class.ROG or Class.NIN => ClassNINUtility.IDLimitBreak3,
+                    Class.SAM => ClassSAMUtility.IDLimitBreak3,
+                    Class.RPR => ActionID.MakeSpell(BossMod.RPR.AID.TheEnd),
+                    Class.VPR => ActionID.MakeSpell(BossMod.VPR.AID.WorldSwallower),
+                    _ => default
+                };
+                if (lb3 != default)
+                    Hints.ActionsToExecute.Push(lb3, primaryTarget, ActionQueue.Priority.VeryHigh, castTime: 4.5f);
+                break;
+        }
     }
 }
