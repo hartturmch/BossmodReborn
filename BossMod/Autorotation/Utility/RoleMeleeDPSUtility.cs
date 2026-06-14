@@ -20,7 +20,7 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
 
         res.Define(Track.LimitBreak).As<LimitBreakOption>("LimitBreak", "LB", 300)
             .AddOption(LimitBreakOption.None, "Do not use automatically")
-            .AddOption(LimitBreakOption.FullOrExecute, "Use when max bars are full or boss is below 10%", 0, 0, ActionTargets.Hostile, defaultPriority: ActionQueue.Priority.VeryHigh)
+            .AddOption(LimitBreakOption.FullOrExecute, "Use on boss when max bars are full or boss is below 10%", 0, 0, ActionTargets.Hostile, defaultPriority: ActionQueue.Priority.VeryHigh)
             .AddAssociatedAction(ActionDefinitions.IDGeneralLimitBreak);
 
         return res;
@@ -35,25 +35,18 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
             Hints.ActionsToExecute.Push(ActionID.MakeSpell(ClassShared.AID.Feint), ResolveTargetOverride(feint.Value) ?? primaryTarget, feint.Priority(), feint.Value.ExpireIn);
 
         var lb = strategy.Option(Track.LimitBreak);
-        var lbTarget = ResolveTargetOverride(lb.Value) ?? LimitBreakTarget(primaryTarget);
-        if (lb.As<LimitBreakOption>() == LimitBreakOption.FullOrExecute && lbTarget != null && ShouldUseLimitBreak())
-            Hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralLimitBreak, lbTarget, lb.Priority(), lb.Value.ExpireIn, castTime: 4.5f);
-    }
-
-    private Actor? LimitBreakTarget(Actor? primaryTarget)
-    {
         var boss = Bossmods.ActiveModule?.PrimaryActor;
-        return IsValidLimitBreakTarget(boss) ? boss : IsValidLimitBreakTarget(primaryTarget) ? primaryTarget : null;
+        if (lb.As<LimitBreakOption>() == LimitBreakOption.FullOrExecute && boss != null && IsValidLimitBreakTarget(boss) && ShouldUseLimitBreak(boss))
+            Hints.ActionsToExecute.Push(ActionDefinitions.IDGeneralLimitBreak, boss, lb.Priority(), lb.Value.ExpireIn, castTime: 4.5f);
     }
 
-    private bool ShouldUseLimitBreak()
+    private bool ShouldUseLimitBreak(Actor boss)
     {
         if (!Player.InCombat)
             return false;
 
         var full = World.Party.LimitBreakMax > 0 && World.Party.LimitBreakCur >= World.Party.LimitBreakMax * Math.Max(World.Party.LimitBreakBars, 1);
-        var boss = Bossmods.ActiveModule?.PrimaryActor;
-        var execute = World.Party.LimitBreakLevel >= 1 && boss != null && IsValidLimitBreakTarget(boss) && boss.PendingHPRatio <= 0.1f;
+        var execute = World.Party.LimitBreakLevel >= 1 && boss.PendingHPRatio <= 0.1f;
         return full || execute;
     }
 
