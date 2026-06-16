@@ -62,8 +62,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 Targeting target = default;
                 if (!forbidTargeting && AIPreset != null && (!_config.ForbidAIMovementMounted || _config.ForbidAIMovementMounted && player.MountId == default))
                 {
+                    if (_config.AttackOnlyMastersTarget)
+                    {
+                        RestrictTargetsToMasterTarget(master);
+                    }
+
                     target = SelectPrimaryTarget(player, master);
-                    if (_config.ManualTarget)
+                    if (_config.ManualTarget && !_config.AttackOnlyMastersTarget)
                     {
                         var t = autorot.WorldState.Actors.Find(player.TargetID);
                         if (t != null)
@@ -89,7 +94,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
                 if (player.PendingKnockbacks.Count == 0)
                 {
-                    var actorTarget = autorot.WorldState.Actors.Find(player.TargetID);
+                    var actorTarget = autorot.Hints.ForcedTarget ?? autorot.WorldState.Actors.Find(player.TargetID);
                     var naviDecision = followTarget && actorTarget != null
                         ? await BuildNavigationDecision(player, actorTarget, target).ConfigureAwait(false)
                         : await BuildNavigationDecision(player, master, target).ConfigureAwait(false);
@@ -124,6 +129,12 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     // returns null if we're to be idle, otherwise target to attack
     private Targeting SelectPrimaryTarget(Actor player, Actor master)
     {
+        if (_config.AttackOnlyMastersTarget)
+        {
+            var masterTarget = FindMasterTarget(master);
+            return masterTarget != null ? BuildTargeting(player, masterTarget) : default;
+        }
+
         // we prefer not to switch targets unnecessarily, so start with current target - it could've been selected manually or by AI on previous frames
         // if current target is not among valid targets, clear it - this opens way for future target selection heuristics
         var targetId = autorot.Hints.ForcedTarget?.InstanceID ?? player.TargetID;
@@ -155,11 +166,12 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             return default;
         }
 
-        // TODO: rethink all this... ai module should set forced target if it wants to switch... figure out positioning and stuff
-        // now give class module a chance to improve targeting
-        // typically it would switch targets for multidotting, or to hit more targets with AOE
-        // in case of ties, it should prefer to return original target - this would prevent useless switches
-        var targeting = new Targeting(target!, player.Role is Role.Melee or Role.Tank ? 2.6f : 24.5f);
+        return BuildTargeting(player, target);
+    }
+
+    private Targeting BuildTargeting(Actor player, AIHints.Enemy target)
+    {
+        var targeting = new Targeting(target, player.Role is Role.Melee or Role.Tank ? 2.6f : 24.5f);
 
         var pos = autorot.Hints.RecommendedPositional;
         if (pos.Target != null && targeting.Target.Actor == pos.Target)
@@ -168,6 +180,36 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
 
         return /*autorot.SelectTargetForAI(targeting) ??*/ targeting;
+    }
+
+    private AIHints.Enemy? FindMasterTarget(Actor master)
+    {
+        var masterTargetId = master.TargetID;
+        if (masterTargetId == default)
+        {
+            return null;
+        }
+
+        foreach (var e in autorot.Hints.PotentialTargets)
+        {
+            if (e.Actor.InstanceID == masterTargetId && e.Priority > AIHints.Enemy.PriorityForbidden)
+            {
+                return e;
+            }
+        }
+
+        return null;
+    }
+
+    private void RestrictTargetsToMasterTarget(Actor master)
+    {
+        var masterTarget = FindMasterTarget(master);
+        foreach (var e in autorot.Hints.PotentialTargets)
+        {
+            e.ForcePriority(e == masterTarget ? Math.Max(e.Priority, 0) : AIHints.Enemy.PriorityForbidden);
+        }
+
+        autorot.Hints.Normalize();
     }
 
     private void AdjustTargetPositional(Actor player, ref Targeting targeting)

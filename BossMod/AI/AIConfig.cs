@@ -39,6 +39,9 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Follow target")]
     public bool FollowTarget = true;
 
+    [PropertyDisplay("Attack only master's target")]
+    public bool AttackOnlyMastersTarget = false;
+
     [PropertyDisplay("Desired positional when following target")]
     [PropertyCombo(["Any", "Flank", "Rear", "Front"])]
     public Positional DesiredPositional = Positional.Any;

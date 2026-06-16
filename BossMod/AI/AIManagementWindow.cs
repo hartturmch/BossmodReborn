@@ -76,6 +76,13 @@ sealed class AIManagementWindow : UIWindow
             ImGui.Text("Follow the target with your distance settings.\nFollow during combat and follow during active boss module need to be activated.");
             ImGui.EndTooltip();
         }
+        configModified |= ImGui.Checkbox("Attack only master's target", ref _config.AttackOnlyMastersTarget);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text("Only attack the current target selected by the follow party slot.\nIf the master has no valid target, AI will not choose another enemy.");
+            ImGui.EndTooltip();
+        }
         ImGui.Spacing();
         configModified |= ImGui.Checkbox("Manual targeting", ref _config.ManualTarget);
         if (ImGui.IsItemHovered())
