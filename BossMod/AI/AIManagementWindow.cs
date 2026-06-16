@@ -83,7 +83,7 @@ sealed class AIManagementWindow : UIWindow
             ImGui.Text("Only attack the current target selected by the follow party slot.\nIf the master has no valid target, AI will not choose another enemy.");
             ImGui.EndTooltip();
         }
-        ImGui.Spacing();
+        ImGui.SameLine();
         configModified |= ImGui.Checkbox("Manual targeting", ref _config.ManualTarget);
         if (ImGui.IsItemHovered())
         {
