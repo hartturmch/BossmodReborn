@@ -23,6 +23,6 @@ https://github.com/FFXIV-CombatReborn/BossmodReborn
 
 ## Changes
 
-1. Change: Added Sprint, Second Wind, Arms Length, and class gap closer support to `Utility for Roles > Melee DPS Utility`.
+1. Change: Added Sprint, Second Wind, Arms Length, and class gap closer support to `Utility for Roles > Melee DPS Utility`; gap closer automation always keeps 1 charge for manual use.
 2. Change: Added smart Limit Break support to `Utility for Roles > Melee DPS Utility`, using it on the boss only when max bars are full or at 10% boss HP.
 3. Change: Added a `Melee DPS Utility` module under `Utility for Roles` with Feint and Bloodbath role actions.

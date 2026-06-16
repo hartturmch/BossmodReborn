@@ -30,7 +30,7 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
 
         res.Define(Track.GapCloser).As<GapCloserOption>("GapCloser", "Gap", 50)
             .AddOption(GapCloserOption.None, "Do not use automatically")
-            .AddOption(GapCloserOption.Use, "Use class gap closer if outside melee range", 30, 0, ActionTargets.Hostile, 20)
+            .AddOption(GapCloserOption.Use, "Use class gap closer if outside melee range; always keeps 1 charge", 30, 0, ActionTargets.Hostile, 20)
             .AddAssociatedAction(ActionID.MakeSpell(MNK.AID.Thunderclap))
             .AddAssociatedAction(ActionID.MakeSpell(DRG.AID.WingedGlide))
             .AddAssociatedAction(ActionID.MakeSpell(NIN.AID.Shukuchi))
@@ -96,12 +96,37 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
         if (action == default)
             return;
 
+        if (AvailableCharges(action) <= 1)
+            return;
+
         if (action == ActionID.MakeSpell(NIN.AID.Shukuchi))
             Hints.ActionsToExecute.Push(action, null, gap.Priority(), gap.Value.ExpireIn, targetPos: target.Position.ToVec3(Player.PosRot.Y));
         else if (action == ActionID.MakeSpell(RPR.AID.HellsIngress))
             Hints.ActionsToExecute.Push(action, Player, gap.Priority(), gap.Value.ExpireIn, facingAngle: Player.AngleTo(target));
         else
             Hints.ActionsToExecute.Push(action, target, gap.Priority(), gap.Value.ExpireIn);
+    }
+
+    private int AvailableCharges(ActionID action)
+    {
+        var def = ActionDefinitions.Instance[action];
+        if (def == null)
+            return 0;
+
+        var maxCharges = def.MaxChargesAtLevel(Player.Level);
+        if (maxCharges <= 1)
+            return def.ReadyIn(World.Client.Cooldowns, World.Client.DutyActions) <= 0.5f ? 1 : 0;
+
+        var capIn = def.ChargeCapIn(World.Client.Cooldowns, World.Client.DutyActions, Player.Level);
+        if (capIn <= 0.05f)
+            return maxCharges;
+
+        var singleChargeCooldown = def.Cooldown;
+        if (singleChargeCooldown <= 0)
+            return maxCharges;
+
+        var chargesMissing = (int)Math.Ceiling(Math.Max(0, capIn - 0.05f) / singleChargeCooldown);
+        return Math.Clamp(maxCharges - chargesMissing, 0, maxCharges);
     }
 
     private static bool IsValidHostileTarget(Actor target) => target.HPMP.MaxHP > 0 && target.IsTargetable && !target.IsDeadOrDestroyed && !target.IsAlly;
