@@ -2,7 +2,7 @@ namespace BossMod.Autorotation;
 
 public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor player) : GenericUtility(manager, player)
 {
-    public enum Track { Bloodbath, Feint, LimitBreak, Sprint, SecondWind, ArmsLength, GapCloser, LegSweep, TrueNorth }
+    public enum Track { Bloodbath, Feint, LimitBreak, Sprint, SecondWind, ArmsLength, LegSweep, TrueNorth, GapCloser }
     public enum FeintOption { None, Use, UseEx }
     public enum LimitBreakOption { None, FullOrExecute }
     public enum GapCloserOption { None, Use }
