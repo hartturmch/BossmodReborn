@@ -29,6 +29,6 @@
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
-    "Changelog": "Added smart Limit Break support to Utility for Roles: Melee DPS Utility. It uses LB on the boss only when the content's max bars are full, or as execute at 10% boss HP."
+    "Changelog": "Added Sprint, Second Wind, Arms Length, and class gap closer support to Utility for Roles: Melee DPS Utility."
   }
 ]
