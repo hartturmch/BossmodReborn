@@ -8,7 +8,7 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
 
     public static RotationModuleDefinition Definition()
     {
-        var res = new RotationModuleDefinition("Melee DPS", "Role utility actions for melee DPS.", "Utility for Roles", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.PGL, Class.MNK, Class.LNC, Class.DRG, Class.ROG, Class.NIN, Class.SAM, Class.RPR, Class.VPR), 100);
+        var res = new RotationModuleDefinition("Melee DPS Utility", "Role utility actions for melee DPS.", "Utility for Roles", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.PGL, Class.MNK, Class.LNC, Class.DRG, Class.ROG, Class.NIN, Class.SAM, Class.RPR, Class.VPR), 100);
 
         DefineSimpleConfig(res, Track.Bloodbath, "Bloodbath", "", 200, ClassShared.AID.Bloodbath, 20);
 
