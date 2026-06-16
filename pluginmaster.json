@@ -29,6 +29,6 @@
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
-    "Changelog": "Added Sprint, Second Wind, Arms Length, and class gap closer support to Utility for Roles: Melee DPS Utility. Gap closer automation always keeps 1 charge for manual use."
+    "Changelog": "Added Sprint, Second Wind, Arms Length, Leg Sweep, True North, and class gap closer support to Utility for Roles: Melee DPS Utility. Gap closer automation always keeps 1 charge for manual use."
   }
 ]
