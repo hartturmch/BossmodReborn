@@ -37,7 +37,7 @@ sealed class GazeOfTheVoidSoaks(BossModule module) : BossComponent(module)
             if (count != 0)
             {
                 var orbz = new ShapeDistance[count];
-                hints.ActionsToExecute.Push(ActionDefinitions.IDSprint, actor, ActionQueue.Priority.High);
+                //hints.ActionsToExecute.Push(ActionDefinitions.IDSprint, actor, ActionQueue.Priority.High);
                 for (var i = 0; i < count; ++i)
                 {
                     var o = orbs[i];
@@ -51,7 +51,7 @@ sealed class GazeOfTheVoidSoaks(BossModule module) : BossComponent(module)
             if (bigcount != 0)
             {
                 var orbz = new ShapeDistance[bigcount];
-                hints.ActionsToExecute.Push(ActionDefinitions.IDSprint, actor, ActionQueue.Priority.High);
+                //hints.ActionsToExecute.Push(ActionDefinitions.IDSprint, actor, ActionQueue.Priority.High);
                 for (var i = 0; i < bigcount; ++i)
                 {
                     var o = bigorbs[i];
