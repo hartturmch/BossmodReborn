@@ -103,8 +103,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 {
                     var actorTarget = autorot.Hints.ForcedTarget ?? autorot.WorldState.Actors.Find(player.TargetID);
                     var naviDecision = followTarget && actorTarget != null
-                        ? await BuildNavigationDecision(player, actorTarget, target, false).ConfigureAwait(false)
-                        : await BuildNavigationDecision(player, master, target, true).ConfigureAwait(false);
+                        ? await BuildNavigationDecision(player, actorTarget, target, false, false).ConfigureAwait(false)
+                        : await BuildNavigationDecision(player, master, target, true, true).ConfigureAwait(false);
                     _naviDecision = naviDecision;
 
                     // there is a difference between having a small positive leeway and having a negative one for pathfinding, prefer to keep positive
@@ -272,7 +272,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
     }
 
-    private async Task<NavigationDecision> BuildNavigationDecision(Actor player, Actor master, Targeting targeting, bool useMasterTrail)
+    private async Task<NavigationDecision> BuildNavigationDecision(Actor player, Actor master, Targeting targeting, bool useMasterTrail, bool allowFollowMaster)
     {
         if (_config.ForbidMovement || _config.ForbidAIMovementMounted && player.MountId != default
             || autorot.Hints.ImminentSpecialMode.mode is AIHints.SpecialMode.NoMovement or AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1d))
@@ -295,12 +295,12 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         {
             forceDestination = interactTarget;
         }
-        else if (_followMaster)
+        else if (allowFollowMaster && _followMaster)
         {
             forceDestination = master;
         }
 
-        _followMaster = interactTarget == null && (_config.FollowDuringCombat || !master.InCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100f) && (_config.FollowDuringActiveBossModule || autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null) && (_config.FollowOutOfCombat || master.InCombat);
+        _followMaster = allowFollowMaster && interactTarget == null && (_config.FollowDuringCombat || !master.InCombat || (_masterPrevPos - _masterMovementStart).LengthSq() > 100f) && (_config.FollowDuringActiveBossModule || autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null) && (_config.FollowOutOfCombat || master.InCombat);
         if (forceDestination != null && forceDestination != master && autorot.Hints.PathfindMapBounds.Contains(forceDestination.Position - autorot.Hints.PathfindMapCenter))
         {
             autorot.Hints.GoalZones.Add(AIHints.GoalProximity(forceDestination, 3.5f, 100f));
