@@ -26,6 +26,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private WPos _masterPrevPos;
     private WPos _masterMovementStart;
     private DateTime _masterLastMoved;
+    private readonly List<(WPos Position, DateTime Time)> _masterTrail = [];
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
@@ -90,21 +91,21 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
                 var followTarget = _config.FollowTarget;
                 _followMaster = master != player;
+                var masterIsMoving = TrackMasterMovement(player, master);
 
                 // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
                 if (player.PendingKnockbacks.Count == 0)
                 {
                     var actorTarget = autorot.Hints.ForcedTarget ?? autorot.WorldState.Actors.Find(player.TargetID);
                     var naviDecision = followTarget && actorTarget != null
-                        ? await BuildNavigationDecision(player, actorTarget, target).ConfigureAwait(false)
-                        : await BuildNavigationDecision(player, master, target).ConfigureAwait(false);
+                        ? await BuildNavigationDecision(player, actorTarget, target, false).ConfigureAwait(false)
+                        : await BuildNavigationDecision(player, master, target, true).ConfigureAwait(false);
                     _naviDecision = naviDecision;
 
                     // there is a difference between having a small positive leeway and having a negative one for pathfinding, prefer to keep positive
                     _naviDecision.LeewaySeconds = Math.Max(0, _naviDecision.LeewaySeconds - 0.1f);
                 }
 
-                var masterIsMoving = TrackMasterMovement(master);
                 var moveWithMaster = masterIsMoving && _followMaster;
                 ForceMovementIn = moveWithMaster || gazeImminent || pyreticImminent ? default : _naviDecision.LeewaySeconds;
 
@@ -238,7 +239,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         }
     }
 
-    private async Task<NavigationDecision> BuildNavigationDecision(Actor player, Actor master, Targeting targeting)
+    private async Task<NavigationDecision> BuildNavigationDecision(Actor player, Actor master, Targeting targeting, bool useMasterTrail)
     {
         if (_config.ForbidMovement || _config.ForbidAIMovementMounted && player.MountId != default
             || autorot.Hints.ImminentSpecialMode.mode is AIHints.SpecialMode.NoMovement or AIHints.SpecialMode.Pyretic && autorot.Hints.ImminentSpecialMode.activation <= WorldState.FutureTime(1d))
@@ -276,7 +277,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             var target = autorot.WorldState.Actors.Find(player.TargetID);
             if ((!_config.FollowTarget || _config.FollowTarget && target == null) && master != player)
             {
-                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(master, Positional.Any, _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot));
+                var followRange = _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot;
+                var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange) : master.Position;
+                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followRange + master.HitboxRadius));
             }
             else if (_config.FollowTarget && target != null && AIPreset == null)
             {
@@ -317,13 +320,16 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         if (masterChanged)
         {
             ctrl.SetFocusTarget(master);
+            _masterTrail.Clear();
             _masterPrevPos = _masterMovementStart = master.Position;
             _masterLastMoved = WorldState.CurrentTime.AddSeconds(-1d);
         }
     }
 
-    private bool TrackMasterMovement(Actor master)
+    private bool TrackMasterMovement(Actor player, Actor master)
     {
+        UpdateMasterTrail(player, master);
+
         // keep track of master movement
         // idea is that if master is moving forward (e.g. running in outdoor or pulling trashpacks in dungeon), we want to closely follow and not stop to cast
         var masterIsMoving = true;
@@ -341,6 +347,75 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         // else: don't consider master to have stopped moving unless he's standing still for some small time
 
         return masterIsMoving;
+    }
+
+    private void UpdateMasterTrail(Actor player, Actor master)
+    {
+        if (master == player)
+        {
+            _masterTrail.Clear();
+            return;
+        }
+
+        var now = WorldState.CurrentTime;
+        if (_masterTrail.Count > 0 && (master.Position - _masterTrail[^1].Position).LengthSq() > 400f)
+        {
+            _masterTrail.Clear();
+        }
+
+        if (_masterTrail.Count == 0 || (master.Position - _masterTrail[^1].Position).LengthSq() >= 1f)
+        {
+            _masterTrail.Add((master.Position, now));
+        }
+
+        var expireBefore = now.AddSeconds(-12);
+        while (_masterTrail.Count > 1 && _masterTrail[0].Time < expireBefore)
+        {
+            _masterTrail.RemoveAt(0);
+        }
+
+        while (_masterTrail.Count > 80)
+        {
+            _masterTrail.RemoveAt(0);
+        }
+    }
+
+    private WPos SelectMasterTrailPoint(Actor player, Actor master, float followRange)
+    {
+        if (_masterTrail.Count < 2 || player.DistanceToHitbox(master) <= followRange + 1f)
+        {
+            return master.Position;
+        }
+
+        var closestIndex = 0;
+        var closestDistSq = float.MaxValue;
+        for (var i = 0; i < _masterTrail.Count; ++i)
+        {
+            var distSq = (_masterTrail[i].Position - player.Position).LengthSq();
+            if (distSq < closestDistSq)
+            {
+                closestDistSq = distSq;
+                closestIndex = i;
+            }
+        }
+
+        if (closestDistSq > 36f)
+        {
+            return _masterTrail[closestIndex].Position;
+        }
+
+        var lookahead = Math.Clamp((master.Position - player.Position).Length() * 0.35f, 3f, 8f);
+        var distance = 0f;
+        for (var i = closestIndex + 1; i < _masterTrail.Count; ++i)
+        {
+            distance += (_masterTrail[i].Position - _masterTrail[i - 1].Position).Length();
+            if (distance >= lookahead)
+            {
+                return _masterTrail[i].Position;
+            }
+        }
+
+        return master.Position;
     }
 
     private void UpdateMovement(Actor player, Actor master, bool gazeOrPyreticImminent, Angle misdirectionAngle, ActionQueue? queueForSprint)

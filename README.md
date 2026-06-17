@@ -23,7 +23,8 @@ https://github.com/FFXIV-CombatReborn/BossmodReborn
 
 ## Changes
 
-1. Change: Added `Attack only master's target` to AI/Navi so slaves only attack the follow party slot's selected target.
-2. Change: Added Sprint, Second Wind, Arms Length, Leg Sweep, True North, and class gap closer support to `Utility for Roles > Melee DPS Utility`; gap closer automation always keeps 1 charge for manual use.
-3. Change: Added smart Limit Break support to `Utility for Roles > Melee DPS Utility`, using it on the boss only when max bars are full or at 10% boss HP.
-4. Change: Added a `Melee DPS Utility` module under `Utility for Roles` with Feint and Bloodbath role actions.
+1. Change: Added master follow trail movement so AI follows the master's recent path instead of cutting directly through corners.
+2. Change: Added `Attack only master's target` to AI/Navi so slaves only attack the follow party slot's selected target.
+3. Change: Added Sprint, Second Wind, Arms Length, Leg Sweep, True North, and class gap closer support to `Utility for Roles > Melee DPS Utility`; gap closer automation always keeps 1 charge for manual use.
+4. Change: Added smart Limit Break support to `Utility for Roles > Melee DPS Utility`, using it on the boss only when max bars are full or at 10% boss HP.
+5. Change: Added a `Melee DPS Utility` module under `Utility for Roles` with Feint and Bloodbath role actions.

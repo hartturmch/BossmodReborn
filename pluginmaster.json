@@ -29,6 +29,6 @@
     "DownloadLinkUpdate": "https://raw.githubusercontent.com/hartturmch/BossmodReborn/main/latest.zip",
     "AssemblyVersion": "0.0.0.1",
     "DownloadCount": 0,
-    "Changelog": "Added Attack only master's target to AI/Navi so slaves only attack the follow party slot's selected target. Added Sprint, Second Wind, Arms Length, Leg Sweep, True North, and class gap closer support to Utility for Roles: Melee DPS Utility."
+    "Changelog": "Added master follow trail movement so AI follows the master's recent path instead of cutting directly through corners. Added Attack only master's target to AI/Navi."
   }
 ]
