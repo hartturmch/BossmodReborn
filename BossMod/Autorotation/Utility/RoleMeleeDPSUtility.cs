@@ -2,7 +2,7 @@ namespace BossMod.Autorotation;
 
 public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor player) : GenericUtility(manager, player)
 {
-    public enum Track { Bloodbath, Feint, LimitBreak, Sprint, SecondWind, ArmsLength, LegSweep, TrueNorth, GapCloser }
+    public enum Track { OnlyInCombat, Bloodbath, Feint, LimitBreak, Sprint, SecondWind, ArmsLength, LegSweep, TrueNorth, GapCloser }
     public enum FeintOption { None, Use, UseEx }
     public enum LimitBreakOption { None, FullOrExecute }
     public enum GapCloserOption { None, Use }
@@ -11,6 +11,10 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
     public static RotationModuleDefinition Definition()
     {
         var res = new RotationModuleDefinition("Melee DPS Utility", "Role utility actions for melee DPS.", "Utility for Roles", "xan", RotationModuleQuality.Basic, BitMask.Build(Class.PGL, Class.MNK, Class.LNC, Class.DRG, Class.ROG, Class.NIN, Class.SAM, Class.RPR, Class.VPR), 100);
+
+        res.Define(Track.OnlyInCombat).As<xan.EnabledByDefault>("OnlyInCombat", "Combat only", 1000, renderer: typeof(xan.DefaultOnRenderer))
+            .AddOption(xan.EnabledByDefault.Enabled, "Do not use utility actions while out of combat")
+            .AddOption(xan.EnabledByDefault.Disabled, "Allow utility actions while out of combat");
 
         DefineSimpleConfig(res, Track.Bloodbath, "Bloodbath", "", 200, ClassShared.AID.Bloodbath, 20);
 
@@ -50,6 +54,9 @@ public sealed class RoleMeleeDPSUtility(RotationModuleManager manager, Actor pla
 
     public override void Execute(StrategyValues strategy, Actor? primaryTarget, float estimatedAnimLockDelay, bool isMoving)
     {
+        if (strategy.Option(Track.OnlyInCombat).As<xan.EnabledByDefault>() == xan.EnabledByDefault.Enabled && !Player.InCombat)
+            return;
+
         ExecuteSimple(strategy.Option(Track.Sprint), ClassShared.AID.Sprint, Player);
         ExecuteSimple(strategy.Option(Track.SecondWind), ClassShared.AID.SecondWind, Player);
         ExecuteSimple(strategy.Option(Track.Bloodbath), ClassShared.AID.Bloodbath, Player);
