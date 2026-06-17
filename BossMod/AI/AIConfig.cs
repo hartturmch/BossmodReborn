@@ -42,6 +42,9 @@ sealed class AIConfig : ConfigNode
     [PropertyDisplay("Attack only master's target")]
     public bool AttackOnlyMastersTarget = false;
 
+    [PropertyDisplay("Follow moving pulls", tooltip: "When attacking only the master's target, follow the master and hold attacks while they are moving in combat.")]
+    public bool FollowMovingPulls = true;
+
     [PropertyDisplay("Desired positional when following target")]
     [PropertyCombo(["Any", "Flank", "Rear", "Front"])]
     public Positional DesiredPositional = Positional.Any;

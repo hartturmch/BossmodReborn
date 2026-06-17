@@ -30,6 +30,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
+    private const double MovingPullStopDelay = 1d;
 
     private bool cancel; // used to cancel autorotation AI preset during async
 
@@ -89,9 +90,10 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     AdjustTargetPositional(player, ref target);
                 }
 
-                var followTarget = _config.FollowTarget && !_config.AttackOnlyMastersTarget;
                 _followMaster = master != player;
                 var masterIsMoving = TrackMasterMovement(player, master);
+                var holdMovingPull = ShouldHoldForMovingPull(player, master, masterIsMoving);
+                var followTarget = _config.FollowTarget && !holdMovingPull;
 
                 // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
                 if (player.PendingKnockbacks.Count == 0)
@@ -116,7 +118,11 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
                 if (!forbidTargeting && !cancel)
                 {
-                    autorot.Preset = target.Target != null ? AIPreset : null;
+                    autorot.Preset = !holdMovingPull && target.Target != null ? AIPreset : null;
+                    if (holdMovingPull)
+                    {
+                        SuppressEnemyActions();
+                    }
                 }
                 UpdateMovement(player, master, gazeImminent || pyreticImminent, misdirectionMode ? autorot.Hints.MisdirectionThreshold : default, !forbidTargeting ? autorot.Hints.ActionsToExecute : null);
             }
@@ -125,6 +131,21 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 _semaphore.Release();
             }
         }
+    }
+
+    private bool ShouldHoldForMovingPull(Actor player, Actor master, bool masterIsMoving)
+    {
+        return _config.AttackOnlyMastersTarget
+            && _config.FollowMovingPulls
+            && master != player
+            && master.InCombat
+            && autorot.Bossmods.ActiveModule?.StateMachine.ActiveState == null
+            && (masterIsMoving || (WorldState.CurrentTime - _masterLastMoved).TotalSeconds <= MovingPullStopDelay);
+    }
+
+    private void SuppressEnemyActions()
+    {
+        autorot.Hints.ActionsToExecute.Entries.RemoveAll(e => e.Target != null && autorot.Hints.FindEnemy(e.Target) != null);
     }
 
     // returns null if we're to be idle, otherwise target to attack

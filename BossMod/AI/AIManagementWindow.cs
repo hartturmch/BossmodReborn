@@ -84,6 +84,14 @@ sealed class AIManagementWindow : UIWindow
             ImGui.EndTooltip();
         }
         ImGui.SameLine();
+        configModified |= ImGui.Checkbox("Follow moving pulls", ref _config.FollowMovingPulls);
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text("With attack-only-master-target enabled, follow the master and hold attacks while they are moving in combat.");
+            ImGui.EndTooltip();
+        }
+        ImGui.SameLine();
         configModified |= ImGui.Checkbox("Manual targeting", ref _config.ManualTarget);
         if (ImGui.IsItemHovered())
         {
