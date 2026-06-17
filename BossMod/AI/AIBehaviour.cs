@@ -30,7 +30,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
-    private const double MovingPullStopDelay = 0.6d;
+    private const double MovingPullStopDelay = 0.3d;
+    private const double MasterMovementStopDelay = 0.25d;
+    private const float MasterMovementThresholdSq = 0.01f;
     private const float MovingPullFollowDistance = 5f;
 
     private bool cancel; // used to cancel autorotation AI preset during async
@@ -367,12 +369,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         // keep track of master movement
         // idea is that if master is moving forward (e.g. running in outdoor or pulling trashpacks in dungeon), we want to closely follow and not stop to cast
         var masterIsMoving = true;
-        if (master.Position != _masterPrevPos)
+        var masterMovementSq = (master.Position - _masterPrevPos).LengthSq();
+        if (masterMovementSq > MasterMovementThresholdSq)
         {
             _masterLastMoved = WorldState.CurrentTime;
             _masterPrevPos = master.Position;
         }
-        else if ((WorldState.CurrentTime - _masterLastMoved).TotalSeconds > 0.5d)
+        else if ((WorldState.CurrentTime - _masterLastMoved).TotalSeconds > MasterMovementStopDelay)
         {
             // master has stopped, consider previous movement finished
             _masterMovementStart = _masterPrevPos;
