@@ -89,7 +89,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                     AdjustTargetPositional(player, ref target);
                 }
 
-                var followTarget = _config.FollowTarget;
+                var followTarget = _config.FollowTarget && !_config.AttackOnlyMastersTarget;
                 _followMaster = master != player;
                 var masterIsMoving = TrackMasterMovement(player, master);
 
@@ -207,7 +207,16 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         var masterTarget = FindMasterTarget(master);
         foreach (var e in autorot.Hints.PotentialTargets)
         {
-            e.ForcePriority(e == masterTarget ? Math.Max(e.Priority, 0) : AIHints.Enemy.PriorityForbidden);
+            if (e == masterTarget)
+            {
+                e.ForcePriority(Math.Max(e.Priority, 0));
+                autorot.Hints.ForcedTarget = e.Actor;
+            }
+            else
+            {
+                e.ForcePriority(AIHints.Enemy.PriorityPointless);
+                e.ForbidDOTs = true;
+            }
         }
 
         autorot.Hints.Normalize();
@@ -275,13 +284,14 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
         if (_followMaster)
         {
             var target = autorot.WorldState.Actors.Find(player.TargetID);
-            if ((!_config.FollowTarget || _config.FollowTarget && target == null) && master != player)
+            var followMasterReference = _config.AttackOnlyMastersTarget || !_config.FollowTarget || _config.FollowTarget && target == null;
+            if (followMasterReference && master != player)
             {
                 var followRange = _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot;
                 var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange) : master.Position;
                 autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followRange + master.HitboxRadius));
             }
-            else if (_config.FollowTarget && target != null && AIPreset == null)
+            else if (!_config.AttackOnlyMastersTarget && _config.FollowTarget && target != null && AIPreset == null)
             {
                 var positional = _config.DesiredPositional;
                 var mindist = _config.MinDistance;
