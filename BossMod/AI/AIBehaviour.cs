@@ -30,9 +30,11 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
-    private const double MovingPullStopDelay = 1d;
+    private const double MovingPullStopDelay = 0.6d;
+    private const float MovingPullFollowDistance = 5f;
 
     private bool cancel; // used to cancel autorotation AI preset during async
+    private bool _holdMovingPull;
 
     public void Dispose() => cancel = true;
 
@@ -93,6 +95,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 _followMaster = master != player;
                 var masterIsMoving = TrackMasterMovement(player, master);
                 var holdMovingPull = ShouldHoldForMovingPull(player, master, masterIsMoving);
+                _holdMovingPull = holdMovingPull;
                 var followTarget = _config.FollowTarget && !holdMovingPull;
 
                 // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
@@ -308,7 +311,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             var followMasterReference = _config.AttackOnlyMastersTarget || !_config.FollowTarget || _config.FollowTarget && target == null;
             if (followMasterReference && master != player)
             {
-                var followRange = _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot;
+                var followRange = _holdMovingPull ? MovingPullFollowDistance : _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot;
                 var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange) : master.Position;
                 autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followRange + master.HitboxRadius));
             }
