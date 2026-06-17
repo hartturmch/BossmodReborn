@@ -12,6 +12,7 @@ sealed class AIManager : IDisposable
     public readonly AIController Controller;
     private static readonly AIConfig _config = Service.Config.Get<AIConfig>();
     private readonly AIManagementWindow _wndAI;
+    private readonly EventSubscriptions _subscriptions;
     public int MasterSlot = PartyState.PlayerSlot; // non-zero means corresponding player is master
     public AIBehaviour? Beh;
     public Preset? AiPreset;
@@ -26,6 +27,7 @@ sealed class AIManager : IDisposable
         _wndAI = new AIManagementWindow(this);
         Autorot = autorot;
         Controller = new(autorot.WorldState, amex, movement);
+        _subscriptions = new(autorot.Bossmods.ModuleDeactivated.Subscribe(OnBossModuleDeactivated));
         Service.CommandManager.AddHandler("/bmrai", new Dalamud.Game.Command.CommandInfo(OnCommand) { HelpMessage = "Toggle AI mode" });
     }
 
@@ -38,6 +40,7 @@ sealed class AIManager : IDisposable
 
     public void Dispose()
     {
+        _subscriptions.Dispose();
         SwitchToIdle();
         _wndAI.Dispose();
         Service.CommandManager.RemoveHandler("/bmrai");
@@ -73,6 +76,37 @@ sealed class AIManager : IDisposable
         Autorot.Preset = null;
         Controller.Clear();
         _wndAI.UpdateTitle();
+    }
+
+    private void OnBossModuleDeactivated(BossModule module)
+    {
+        if (Beh == null || !IsDefeatedFinalDungeonBoss(module))
+        {
+            return;
+        }
+
+        if (_config.EchoToChat)
+        {
+            Service.ChatGui.Print("[BMRAI] Final dungeon boss defeated. Switching AI to idle.");
+        }
+        SwitchToIdle();
+    }
+
+    private static bool IsDefeatedFinalDungeonBoss(BossModule module)
+    {
+        var info = module.Info;
+        if (info == null
+            || info.Category != BossModuleInfo.Category.Dungeon
+            || info.GroupType != BossModuleInfo.GroupType.CFC
+            || (!module.PrimaryActor.IsDeadOrDestroyed && module.PrimaryActor.HPMP.CurHP != default))
+        {
+            return false;
+        }
+
+        var lastSortOrder = BossModuleRegistry.RegisteredModules.Values
+            .Where(i => i.Category == BossModuleInfo.Category.Dungeon && i.GroupType == BossModuleInfo.GroupType.CFC && i.GroupID == info.GroupID)
+            .Max(i => i.SortOrder);
+        return info.SortOrder >= lastSortOrder;
     }
 
     public void SwitchToFollow(int masterSlot)
