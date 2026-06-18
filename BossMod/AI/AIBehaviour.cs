@@ -30,7 +30,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private DateTime _navStartTime; // if current time is < this, navigation won't start
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static readonly Random random = new();
-    private const double MovingPullStopDelay = 0.3d;
+    private const double MovingPullStopDelay = 0.1d;
     private const double MasterMovementStopDelay = 0.25d;
     private const float MasterMovementThresholdSq = 0.01f;
     private const float MovingPullFollowDistance = 5f;
@@ -123,8 +123,8 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
                 if (!forbidTargeting && !cancel)
                 {
-                    autorot.Preset = !holdMovingPull && target.Target != null ? AIPreset : null;
-                    if (holdMovingPull)
+                    autorot.Preset = AIPreset;
+                    if (holdMovingPull || _config.AttackOnlyMastersTarget && target.Target == null)
                     {
                         SuppressEnemyActions();
                     }
