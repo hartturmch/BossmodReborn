@@ -34,6 +34,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
     private const double MasterMovementStopDelay = 0.25d;
     private const float MasterMovementThresholdSq = 0.01f;
     private const float MovingPullFollowDistance = 5f;
+    private const float MasterTrailSampleDistanceSq = 0.25f;
+    private const float MasterTrailReachDistanceSq = 0.36f;
+    private const float MasterTrailGoalRadius = 0.5f;
 
     private bool cancel; // used to cancel autorotation AI preset during async
     private bool _holdMovingPull;
@@ -314,8 +317,9 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             if (followMasterReference && master != player)
             {
                 var followRange = _holdMovingPull ? MovingPullFollowDistance : _config.FollowTarget && player.InCombat ? _config.MaxDistanceToTarget : _config.MaxDistanceToSlot;
-                var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange) : master.Position;
-                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followRange + master.HitboxRadius));
+                var followingTrail = false;
+                var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange, out followingTrail) : master.Position;
+                autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followingTrail ? MasterTrailGoalRadius : followRange + master.HitboxRadius));
             }
             else if (!_config.AttackOnlyMastersTarget && _config.FollowTarget && target != null && AIPreset == null)
             {
@@ -400,7 +404,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             _masterTrail.Clear();
         }
 
-        if (_masterTrail.Count == 0 || (master.Position - _masterTrail[^1].Position).LengthSq() >= 1f)
+        if (_masterTrail.Count == 0 || (master.Position - _masterTrail[^1].Position).LengthSq() >= MasterTrailSampleDistanceSq)
         {
             _masterTrail.Add((master.Position, now));
         }
@@ -411,14 +415,15 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             _masterTrail.RemoveAt(0);
         }
 
-        while (_masterTrail.Count > 300)
+        while (_masterTrail.Count > 600)
         {
             _masterTrail.RemoveAt(0);
         }
     }
 
-    private WPos SelectMasterTrailPoint(Actor player, Actor master, float followRange)
+    private WPos SelectMasterTrailPoint(Actor player, Actor master, float followRange, out bool followingTrail)
     {
+        followingTrail = false;
         if (_masterTrail.Count < 2)
         {
             return master.Position;
@@ -433,11 +438,12 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
         // Consume breadcrumbs in order. Nearest-point selection can skip a corner
         // and leave direct movement pushing against the wall.
-        while (_masterTrail.Count > 1 && (_masterTrail[0].Position - player.Position).LengthSq() <= 2.25f)
+        while (_masterTrail.Count > 1 && (_masterTrail[0].Position - player.Position).LengthSq() <= MasterTrailReachDistanceSq)
         {
             _masterTrail.RemoveAt(0);
         }
 
+        followingTrail = true;
         return _masterTrail[0].Position;
     }
 
