@@ -320,6 +320,12 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 var followingTrail = false;
                 var followPoint = useMasterTrail ? SelectMasterTrailPoint(player, master, followRange, out followingTrail) : master.Position;
                 autorot.Hints.GoalZones.Add(AIHints.GoalSingleTarget(followPoint, followingTrail ? MasterTrailGoalRadius : followRange + master.HitboxRadius));
+                if (followingTrail)
+                {
+                    // Dynamic doors can remain blocked in the static obstacle bitmap. The breadcrumb
+                    // is a path the master already traversed, so use it as the obstacle-safe route.
+                    autorot.Hints.PathfindMapObstacles = default;
+                }
             }
             else if (!_config.AttackOnlyMastersTarget && _config.FollowTarget && target != null && AIPreset == null)
             {
