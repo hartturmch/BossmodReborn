@@ -405,13 +405,13 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
             _masterTrail.Add((master.Position, now));
         }
 
-        var expireBefore = now.AddSeconds(-12);
+        var expireBefore = now.AddSeconds(-45);
         while (_masterTrail.Count > 1 && _masterTrail[0].Time < expireBefore)
         {
             _masterTrail.RemoveAt(0);
         }
 
-        while (_masterTrail.Count > 80)
+        while (_masterTrail.Count > 300)
         {
             _masterTrail.RemoveAt(0);
         }
@@ -419,40 +419,26 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
 
     private WPos SelectMasterTrailPoint(Actor player, Actor master, float followRange)
     {
-        if (_masterTrail.Count < 2 || player.DistanceToHitbox(master) <= followRange + 1f)
+        if (_masterTrail.Count < 2)
         {
             return master.Position;
         }
 
-        var closestIndex = 0;
-        var closestDistSq = float.MaxValue;
-        for (var i = 0; i < _masterTrail.Count; ++i)
+        if (player.DistanceToHitbox(master) <= followRange + 1f)
         {
-            var distSq = (_masterTrail[i].Position - player.Position).LengthSq();
-            if (distSq < closestDistSq)
-            {
-                closestDistSq = distSq;
-                closestIndex = i;
-            }
+            _masterTrail.Clear();
+            _masterTrail.Add((master.Position, WorldState.CurrentTime));
+            return master.Position;
         }
 
-        if (closestDistSq > 36f)
+        // Consume breadcrumbs in order. Nearest-point selection can skip a corner
+        // and leave direct movement pushing against the wall.
+        while (_masterTrail.Count > 1 && (_masterTrail[0].Position - player.Position).LengthSq() <= 2.25f)
         {
-            return _masterTrail[closestIndex].Position;
+            _masterTrail.RemoveAt(0);
         }
 
-        var lookahead = Math.Clamp((master.Position - player.Position).Length() * 0.35f, 3f, 8f);
-        var distance = 0f;
-        for (var i = closestIndex + 1; i < _masterTrail.Count; ++i)
-        {
-            distance += (_masterTrail[i].Position - _masterTrail[i - 1].Position).Length();
-            if (distance >= lookahead)
-            {
-                return _masterTrail[i].Position;
-            }
-        }
-
-        return master.Position;
+        return _masterTrail[0].Position;
     }
 
     private void UpdateMovement(Actor player, Actor master, bool gazeOrPyreticImminent, Angle misdirectionAngle, ActionQueue? queueForSprint)
