@@ -98,7 +98,7 @@ sealed class AIBehaviour(AIController ctrl, RotationModuleManager autorot, Prese
                 var masterIsMoving = TrackMasterMovement(player, master);
                 var holdMovingPull = ShouldHoldForMovingPull(player, master, masterIsMoving);
                 _holdMovingPull = holdMovingPull;
-                var followTarget = _config.FollowTarget && !holdMovingPull;
+                var followTarget = _config.FollowTarget && !holdMovingPull && target.Target != null;
 
                 // note: if there are pending knockbacks, don't update navigation decision to avoid fucking up positioning
                 if (player.PendingKnockbacks.Count == 0)
